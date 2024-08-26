@@ -1,28 +1,29 @@
-# Pupperfit
+# PupperFit
 
-## Introduciton
+## A simple pdf http server.
 
-Pupperfit is a webservice that responds incoming url requests for printing PDF pages as 
+### How it works
 
-## Installation
-  With npm
-  ```
-    npm install pupperfit     
-  ```
-  With yarn
-  ```
-    yarn add pupperfit
-  ```
-## Running the service
+Creates a http server that can generate complex pdf pages with full html5/css3 and javascript functionality with lower memory and time.
 
-  With npm
-  ```   
-    npm run    
-  ```
-  With yarn
-  ```
-    yarn run
-  ```
-## Printing a HTTP page
+#### Installation
+```bash
+    yarn install pupperfit;
+    // or 
+    npm install pupperfit;
+```
 
- Create a post request to http://localhost:3000 passing a url as data.
+#### Running
+```bash
+    node index.js // Makes it be online on localhost:3001
+```
+
+#### Creating pdf 
+Do a simple http request with your preferred http client to http://localhost:3001 containing the desired html page.
+```bash
+    curl -X POST http://localhost:3001 
+   -H "Content-Type: text/plain"
+   -d 'Hello world :)'  
+```
+
+

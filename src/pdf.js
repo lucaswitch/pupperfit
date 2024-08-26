@@ -1,70 +1,62 @@
-import path from "path";
-import { fileURLToPath } from "url";
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-import { access, mkdir } from "node:fs/promises";
 import puppeteer from "puppeteer";
-import { v4 as uuidv4 } from "uuid";
+import os from "os";
+import { randomBytes } from "node:crypto";
+import { nanoid } from "nanoid";
 
-const GENERATED_DIR = __dirname + "/../.generated";
+const tmpDir = os.tmpdir();
+
+let browser = null;
 
 /**
- * Cria um diretório único e retorna o caminho.
+ * Gets the current browser instance.
+ * @return {Promise<null|Browser>}
  */
-async function getOrCreateGeneratedDirectory() {
-  let exists = false;
-  try {
-    await access(GENERATED_DIR);
-    exists = true;
-  } catch (err) {
-    exists = false;
+async function getBrowserInstance() {
+  if (!browser) {
+    try {
+      browser = await puppeteer.launch();
+    } catch (err) {
+      console.error(`It was not possible to create puppeteer instance. ${err}`);
+      browser = null;
+    }
   }
-
-  if (!exists) {
-    await mkdir(GENERATED_DIR);
-  }
-  return GENERATED_DIR;
+  return browser;
 }
 
 /**
- * Obtém um arquivo com nome unico.
- * @returns {Promise<string>}
+ * Creates a pdf from a html string
+ * @param browser {Browser} The chromium headless browser launched instance.
+ * @param html {string} The full html page as string.
+ * @return {Promise<null|string>} Null or the path containg the generated pdf.
  */
-async function getUniqueFileName() {
-  return await uuidv4().replace(/-/g, "");
-}
+export async function createPdfFromHtml(html) {
+  console.info(`Creating pdf with html...`);
 
-/**
- * Realiza print de uma página.
- * @returns {Promise<string>}
- */
-export async function createPdfFromPageUrl(url, page, targetDir) {
-  console.info(`Creating pdf at path "${url}"`);
+  const browser = await getBrowserInstance();
+  if (!browser) {
+    throw new Error("It was not possible to create the browser instance.");
+  }
+
+  const page = await browser.newPage();
+  const id = nanoid();
+
+  const name = `${id}.pdf`;
+  const path = `${tmpDir}/${name}`;
+
   try {
-    // Obter o caminho do PDF.
-    const filename = await getUniqueFileName();
-    console.info(`Waiting page to load... "${url}"`);
-    await page.goto(url, { timeout: 0, waitUntil: "networkidle2" });
-    console.info(`Page loaded "${url}"`);
+    await page.setContent(html);
 
-    const path = `${targetDir}/${filename}.pdf`;
-    await page.pdf({ path, format: "A4", timeout: 0 });
+    console.info("Waiting resources to be downloaded...");
+    // await page.waitForNavigation({ waitUntil: "networkidle2" });
+    await page.waitForNetworkIdle();
+    console.info("Html resources downloaded successfully.");
+
+    await page.pdf({ path, format: "A4", timeout: 0, printBackground: true });
     console.info(`Pdf created at path "${path}"`);
-    page.close();
+    await page.close();
     return path;
   } catch (err) {
-    page.close();
-    throw err;
+    await page.close();
+    return null;
   }
-}
-
-/**
- * Obtém a instância do browser.
- * @returns {Promise<Browser>}
- */
-export async function getConfiguration() {
-  return {
-    browser: await puppeteer.launch(),
-    targetDir: await getOrCreateGeneratedDirectory(),
-  };
 }
