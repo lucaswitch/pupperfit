@@ -11,7 +11,7 @@ let app = null;
  * @returns {*}
  */
 export async function startHttpServer(port = 3001) {
-  const host = "127.0.0.1";
+  const host = "0.0.0.0";
   app = express();
 
   app.use(bodyParser.json());

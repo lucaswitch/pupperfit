@@ -1,6 +1,5 @@
 import puppeteer from "puppeteer";
 import os from "os";
-import { randomBytes } from "node:crypto";
 import { nanoid } from "nanoid";
 
 const tmpDir = os.tmpdir();
@@ -14,7 +13,9 @@ let browser = null;
 async function getBrowserInstance() {
   if (!browser) {
     try {
-      browser = await puppeteer.launch();
+      browser = await puppeteer.launch({
+        executablePath: "/usr/bin/google-chrome-stable",
+      });
     } catch (err) {
       console.error(`It was not possible to create puppeteer instance. ${err}`);
       browser = null;

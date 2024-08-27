@@ -1,5 +1,9 @@
 import { startHttpServer } from "./src/index.js";
 
 (async () => {
-  await startHttpServer(3001);
+  try {
+    await startHttpServer(3001);
+  } catch (err) {
+    console.error(err);
+  }
 })();
