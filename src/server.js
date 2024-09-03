@@ -14,9 +14,14 @@ export async function startHttpServer(port = 3001) {
   const host = "0.0.0.0";
   app = express();
 
-  app.use(bodyParser.json());
+  app.use(
+    bodyParser.json({
+      limit: "100mb",
+    })
+  );
   app.use(
     bodyParser.urlencoded({
+      limit: "100mb",
       extended: true,
     })
   );

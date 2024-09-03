@@ -15,6 +15,9 @@ async function getBrowserInstance() {
     try {
       browser = await puppeteer.launch({
         executablePath: "/usr/bin/google-chrome-stable",
+        ignoreHTTPSErrors: true,
+        headless: "new",
+        args: ["--no-sandbox"],
       });
     } catch (err) {
       console.error(`It was not possible to create puppeteer instance. ${err}`);
@@ -45,11 +48,13 @@ export async function createPdfFromHtml(html) {
   const path = `${tmpDir}/${name}`;
 
   try {
-    await page.setContent(html);
+    await page.setContent(html, {
+      waitUntil: ["load", "domcontentloaded", "networkidle2"],
+    });
+    await page.emulateMediaType("print");
 
     console.info("Waiting resources to be downloaded...");
     // await page.waitForNavigation({ waitUntil: "networkidle2" });
-    await page.waitForNetworkIdle();
     console.info("Html resources downloaded successfully.");
 
     await page.pdf({ path, format: "A4", timeout: 0, printBackground: true });
