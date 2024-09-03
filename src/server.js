@@ -1,7 +1,6 @@
 import express from "express";
 import createHttpError from "http-error";
 import { createPdfFromHtml } from "./pdf.js";
-import bodyParser from "express";
 
 let app = null;
 
@@ -14,20 +13,26 @@ export async function startHttpServer(port = 3001) {
   const host = "0.0.0.0";
   app = express();
 
+  const maxSize = "250mb";
+
   app.use(
-    bodyParser.json({
-      limit: "100mb",
+    express.json({
+      limit: maxSize,
     })
   );
   app.use(
-    bodyParser.urlencoded({
-      limit: "100mb",
+    express.urlencoded({
+      limit: maxSize,
       extended: true,
     })
   );
-  app.use(bodyParser.text());
+  app.use(
+    express.text({
+      limit: maxSize,
+    })
+  );
 
-  console.info("Initializing pdf http server...");
+  console.info(`Initializing pdf http server... max incomming size ${maxSize}`);
 
   app.post("/create-pdf", async function (req, res, next) {
     const html = req.body;
